@@ -96,7 +96,28 @@ def drop_column(conn, table_name, column_name):
 
     finally:
         cur.close()
+def view_table(conn, table_name):
+    try:
+        cur = conn.cursor()
 
+        # Выполняем запрос для выборки всех данных из таблицы
+        cur.execute(f"SELECT * FROM {table_name};")
+        rows = cur.fetchall()
+
+        # Выводим заголовки столбцов
+        cur.execute(f"SELECT column_name FROM information_schema.columns WHERE table_name = '{table_name}';")
+        columns = [row[0] for row in cur.fetchall()]
+        print(" | ".join(columns))
+
+        # Выводим данные
+        for row in rows:
+            print(" | ".join(str(cell) for cell in row))
+
+    except psycopg2.Error as e:
+        print("Ошибка при просмотре таблицы:", e)
+
+    finally:
+        cur.close()
 def main():
     conn = connect_to_database()
     if conn:
@@ -114,7 +135,7 @@ def main():
                     print("Не удалось получить информацию о столбцах.")
                     continue
                 
-                action = input("Выберите действие (add - добавить столбец, drop - удалить столбец, insert - вставить данные в строку): ")
+                action = input("Выберите действие (add - добавить столбец, drop - удалить столбец, insert - вставить данные в строку, view - просмотреть данные): ")
                 
                 if action.lower() == 'add':
                     column_name = input("Введите имя нового столбца: ")
@@ -127,6 +148,9 @@ def main():
                 
                 elif action.lower() == 'insert':
                     insert_into_table(conn, table_name)
+                
+                elif action.lower() == 'view':
+                    view_table(conn, table_name)
                 
                 else:
                     print("Некорректное действие. Попробуйте снова.")
