@@ -1,63 +1,82 @@
 import psycopg2
+def create_tables():
+    # Подключение к базе данных
+    conn = psycopg2.connect(
+        dbname="PyPrac",
+        user="postgres",
+        password="1",
+        host="185.166.197.179",
+        port="5432"
+        )
+    cursor = conn.cursor()
 
-# Установка соединения с базой данных PostgreSQL
-conn = psycopg2.connect(
-    dbname="IlyaPrac",
-    user="postgres",
-    password="1",
-    host="185.166.197.179",
-    port="5432"
-)
-cur = conn.cursor()
+    cursor.execute('''
+    CREATE TABLE IF NOT EXISTS Виды_туров (
+        Id_вида SERIAL PRIMARY KEY,
+        Вид_тура VARCHAR(255)
+    )
+    ''')
 
-
-cur.execute("""
-CREATE TABLE IF NOT EXISTS Место_размещения (
-    Номер_Места INT PRIMARY KEY,
-    Тип_места VARCHAR(255)
-);
-""")
-# Создание таблицы "Путевки"
-cur.execute("""
-CREATE TABLE IF NOT EXISTS Путевки (
-    Номер_путевки SERIAL PRIMARY KEY,
-    Фамилия_клиента VARCHAR(255),
-    Дата_оформления DATE,
-    Стоимость_путевки INT,
-    Дата_начала DATE,
-    Дата_окончания DATE,
-    Тип_путевки VARCHAR(255),
-    Статус_оплаты VARCHAR(255),
-    Номер_места int,
-    FOREIGN KEY (Номер_места) REFERENCES Место_размещения (Номер_Места)
-                     
-);
-""")
-
-
-# Создание таблицы "Дополнительные_услуги"
-cur.execute("""
-CREATE TABLE IF NOT EXISTS Дополнительные_услуги (
-    Номер_путевки INT,
-    Дополнительные_услуги TEXT,
-    FOREIGN KEY (Номер_путевки) REFERENCES Путевки (Номер_путевки)
-);
-""")
-cur.execute("""
-CREATE TABLE IF NOT EXISTS Клиенты (
-    Фамилия_клиента char(255),
-    Номер_путевки Int,
-    FOREIGN KEY (Номер_путевки) REFERENCES Путевки (Номер_путевки)
-);
-""")
+    cursor.execute('''
+    CREATE TABLE IF NOT EXISTS Страны (
+        Id_страны SERIAL PRIMARY KEY,
+        Страна VARCHAR(255)
+    )
+    ''')
+    # Создание таблицы "туры"
+    cursor.execute('''
+    CREATE TABLE IF NOT EXISTS туры (
+        Id_тура SERIAL PRIMARY KEY,
+        Цена DECIMAL(10, 2),
+        Дата_отправления DATE,
+        Количество_дней INTEGER,
+        Количество_людей INTEGER,
+        Id_страны INTEGER REFERENCES Страны(Id_страны),
+        id_вида_тура INTEGER REFERENCES Виды_туров(Id_вида)
+    )
+    ''')
 
 
-# Применение изменений
-conn.commit()
+    # Создание таблицы "Клиенты"
+    cursor.execute('''
+    CREATE TABLE IF NOT EXISTS Клиенты (
+        Id_клиента SERIAL PRIMARY KEY,
+        Фамилия VARCHAR(255),
+        Телефон VARCHAR(20)
+    )
+    ''')
 
-# Закрытие курсора и соединения
-cur.close()
-conn.close()
+    # Создание таблицы "Продажи"
+    cursor.execute('''
+    CREATE TABLE IF NOT EXISTS Продажи (
+        Id_продажи SERIAL PRIMARY KEY,
+        Дата DATE,
+        Количество INTEGER,
+        Id_клиента INTEGER REFERENCES Клиенты(Id_клиента),
+        Id_тура INTEGER REFERENCES туры(Id_тура)
+    )
+    ''')
 
-# Вывод сообщения об успешном создании таблиц
-print("Таблицы успешно созданы.")
+    cursor.execute('''
+    CREATE VIEW tour_client_info AS
+        SELECT
+            туры.Id_тура,
+            Клиенты.Фамилия AS Фамилия_клиента,
+            туры.Цена,
+            Страны.Страна
+        FROM
+            туры
+        JOIN
+            Продажи ON туры.Id_тура = Продажи.Id_тура
+        JOIN
+            Клиенты ON Продажи.Id_клиента = Клиенты.Id_клиента
+        JOIN
+            Страны ON туры.Id_страны = Страны.Id_страны;
+    '''
+    )
+    # Сохранение изменений и закрытие соединения
+    conn.commit()
+    conn.close()
+
+# Вызов функции для создания таблиц
+create_tables()
