@@ -4,7 +4,7 @@ def connect_to_database():
     try:
         # Установка соединения с базой данных PostgreSQL
         conn = psycopg2.connect(
-            dbname="IlyaPrac",
+            dbname="PyPrac",
             user="postgres",
             password="1",
             host="185.166.197.179",
@@ -14,6 +14,7 @@ def connect_to_database():
     except psycopg2.Error as e:
         print("Ошибка при подключении к базе данных:", e)
         return None
+
 def insert_into_table(conn, table_name):
     try:
         cur = conn.cursor()
@@ -44,6 +45,7 @@ def insert_into_table(conn, table_name):
 
     finally:
         cur.close()
+
 def get_table_columns(conn, table_name):
     try:
         cur = conn.cursor()
@@ -96,28 +98,49 @@ def drop_column(conn, table_name, column_name):
 
     finally:
         cur.close()
+
 def view_table(conn, table_name):
     try:
         cur = conn.cursor()
 
-        # Выполняем запрос для выборки всех данных из таблицы
-        cur.execute(f"SELECT * FROM {table_name};")
+        # Проверяем, является ли введенное имя таблицей или представлением
+        cur.execute("SELECT EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = %s)", (table_name,))
+        is_table = cur.fetchone()[0]
+
+        if is_table:
+            # Если введенное имя - таблица, выполняем запрос для выборки всех данных из таблицы
+            cur.execute(f"SELECT * FROM {table_name};")
+        else:
+            # Если введенное имя - представление, выполняем запрос для выборки всех данных из представления
+            cur.execute(f"SELECT * FROM {table_name};")
+
         rows = cur.fetchall()
 
         # Выводим заголовки столбцов
         cur.execute(f"SELECT column_name FROM information_schema.columns WHERE table_name = '{table_name}';")
         columns = [row[0] for row in cur.fetchall()]
-        print(" | ".join(columns))
 
-        # Выводим данные
+        # Определяем максимальную длину для каждого столбца
+        column_widths = [max(len(str(row[i])) for row in rows) for i in range(len(columns))]
+
+        # Выводим заголовки столбцов с выравниванием
+        print(" | ".join(columns))
+        for i in range(len(columns)):
+            print("-" * column_widths[i], end=" | ")
+        print()
+
+        # Выводим данные с выравниванием
         for row in rows:
-            print(" | ".join(str(cell) for cell in row))
+            for i in range(len(columns)):
+                print(str(row[i]).ljust(column_widths[i]), end=" | ")
+            print()
 
     except psycopg2.Error as e:
-        print("Ошибка при просмотре таблицы:", e)
+        print("Ошибка при просмотре таблицы или представления:", e)
 
     finally:
         cur.close()
+
 def main():
     conn = connect_to_database()
     if conn:
@@ -135,26 +158,30 @@ def main():
                     print("Не удалось получить информацию о столбцах.")
                     continue
                 
-                action = input("Выберите действие (add - добавить столбец, drop - удалить столбец, insert - вставить данные в строку, view - просмотреть данные): ")
-                
-                if action.lower() == 'add':
-                    column_name = input("Введите имя нового столбца: ")
-                    column_type = input("Введите тип нового столбца (например, VARCHAR(255)): ")
-                    add_column(conn, table_name, column_name, column_type)
-                
-                elif action.lower() == 'drop':
-                    column_name = input("Введите имя столбца, который хотите удалить: ")
-                    drop_column(conn, table_name, column_name)
-                
-                elif action.lower() == 'insert':
-                    insert_into_table(conn, table_name)
-                
-                elif action.lower() == 'view':
-                    view_table(conn, table_name)
-                
-                else:
-                    print("Некорректное действие. Попробуйте снова.")
-
+                while True:
+                    action = input("Выберите действие (add - добавить столбец, drop - удалить столбец, insert - вставить данные в строку, view - просмотреть данные, back - вернуться к выбору таблицы): ")
+                    
+                    if action.lower() == 'add':
+                        column_name = input("Введите имя нового столбца: ")
+                        column_type = input("Введите тип нового столбца (например, VARCHAR(255)): ")
+                        add_column(conn, table_name, column_name, column_type)
+                    
+                    elif action.lower() == 'drop':
+                        column_name = input("Введите имя столбца, который хотите удалить: ")
+                        drop_column(conn, table_name, column_name)
+                    
+                    elif action.lower() == 'insert':
+                        insert_into_table(conn, table_name)
+                    
+                    elif action.lower() == 'view':
+                        view_table(conn, table_name)
+                    
+                    elif action.lower() == 'back':
+                        break
+                    
+                    else:
+                        print("Некорректное действие. Попробуйте снова.")
+        
         finally:
             conn.close()
             print("Программа завершена.")
