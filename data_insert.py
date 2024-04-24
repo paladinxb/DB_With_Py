@@ -120,19 +120,23 @@ def view_table(conn, table_name):
         cur.execute(f"SELECT column_name FROM information_schema.columns WHERE table_name = '{table_name}';")
         columns = [row[0] for row in cur.fetchall()]
 
-        # Определяем максимальную длину для каждого столбца
-        column_widths = [max(len(str(row[i])) for row in rows) for i in range(len(columns))]
+        # Определяем максимальную длину для каждого столбца (для названий столбцов и данных)
+        max_widths = [max(len(str(row[i])) for row in rows + [columns]) for i in range(len(columns))]
 
         # Выводим заголовки столбцов с выравниванием
-        print(" | ".join(columns))
-        for i in range(len(columns)):
-            print("-" * column_widths[i], end=" | ")
+        for i, column in enumerate(columns):
+            print(column.ljust(max_widths[i]), end=" | ")
+        print()
+
+        # Выводим разделительную строку
+        for width in max_widths:
+            print("-" * width, end=" | ")
         print()
 
         # Выводим данные с выравниванием
         for row in rows:
             for i in range(len(columns)):
-                print(str(row[i]).ljust(column_widths[i]), end=" | ")
+                print(str(row[i]).ljust(max_widths[i]), end=" | ")
             print()
 
     except psycopg2.Error as e:
@@ -146,41 +150,54 @@ def main():
     if conn:
         try:
             while True:
-                table_name = input("Введите имя таблицы, с которой хотите работать (или 'exit' для выхода): ")
-                if table_name.lower() == 'exit':
+                choice = input("Введите 'table' для работы с таблицами или 'query' для работы с запросами (или 'exit' для выхода): ")
+                if choice.lower() == 'exit':
                     break
                 
-                # Получаем текущие столбцы таблицы
-                columns = get_table_columns(conn, table_name)
-                if columns:
-                    print("Текущие столбцы в таблице:", columns)
-                else:
-                    print("Не удалось получить информацию о столбцах.")
-                    continue
+                elif choice.lower() == 'table':
+                    while True:
+                        table_name = input("Введите имя таблицы, с которой хотите работать (или 'back' для возврата к выбору режима): ")
+                        if table_name.lower() == 'back':
+                            break
+                        
+                        # Получаем текущие столбцы таблицы
+                        columns = get_table_columns(conn, table_name)
+                        if columns:
+                            print("Текущие столбцы в таблице:", columns)
+                        else:
+                            print("Не удалось получить информацию о столбцах.")
+                            continue
+                        
+                        while True:
+                            action = input("Выберите действие (add - добавить столбец, drop - удалить столбец, insert - вставить данные в строку, view - просмотреть данные, back - вернуться к выбору таблицы): ")
+                            
+                            if action.lower() == 'add':
+                                column_name = input("Введите имя нового столбца: ")
+                                column_type = input("Введите тип нового столбца (например, VARCHAR(255)): ")
+                                add_column(conn, table_name, column_name, column_type)
+                            
+                            elif action.lower() == 'drop':
+                                column_name = input("Введите имя столбца, который хотите удалить: ")
+                                drop_column(conn, table_name, column_name)
+                            
+                            elif action.lower() == 'insert':
+                                insert_into_table(conn, table_name)
+                            
+                            elif action.lower() == 'view':
+                                view_table(conn, table_name)
+                            
+                            elif action.lower() == 'back':
+                                break
+                            
+                            else:
+                                print("Некорректное действие. Попробуйте снова.")
                 
-                while True:
-                    action = input("Выберите действие (add - добавить столбец, drop - удалить столбец, insert - вставить данные в строку, view - просмотреть данные, back - вернуться к выбору таблицы): ")
-                    
-                    if action.lower() == 'add':
-                        column_name = input("Введите имя нового столбца: ")
-                        column_type = input("Введите тип нового столбца (например, VARCHAR(255)): ")
-                        add_column(conn, table_name, column_name, column_type)
-                    
-                    elif action.lower() == 'drop':
-                        column_name = input("Введите имя столбца, который хотите удалить: ")
-                        drop_column(conn, table_name, column_name)
-                    
-                    elif action.lower() == 'insert':
-                        insert_into_table(conn, table_name)
-                    
-                    elif action.lower() == 'view':
-                        view_table(conn, table_name)
-                    
-                    elif action.lower() == 'back':
-                        break
-                    
-                    else:
-                        print("Некорректное действие. Попробуйте снова.")
+                elif choice.lower() == 'query':
+                    print("В разработке.")
+                    # Здесь будет логика работы с запросами
+                
+                else:
+                    print("Некорректный выбор. Попробуйте снова.")
         
         finally:
             conn.close()
