@@ -1,3 +1,5 @@
+#-----при выводе запросов, надо сделать навзания столбцев и все-----------------
+
 import tkinter as tk
 import data_insert
 import psycopg2
