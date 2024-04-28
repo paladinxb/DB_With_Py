@@ -1,10 +1,17 @@
 SELECT * FROM Туры;
+
 SELECT * FROM Туры WHERE id_страны = (SELECT id_страны FROM Страны WHERE Страна = 'Париж');
+
 SELECT * FROM Туры WHERE id_вида_тура = (SELECT id_вида FROM Виды_туров WHERE Вид_тура = 'люкс');
+
 SELECT * FROM Туры WHERE Цена BETWEEN :min_price AND :max_price;
+
 SELECT * FROM Туры WHERE MONTH(Дата_отправления) = :month;
+
 SELECT * FROM Продажи WHERE Дата BETWEEN :start_date AND :end_date;
+
 SELECT * FROM Туры WHERE Цена BETWEEN :min_price AND :max_price;
+
 SELECT * FROM Туры WHERE id_страны = (SELECT id_страны FROM Страны WHERE Страна = :countr
 
 SELECT * FROM Продажи 
