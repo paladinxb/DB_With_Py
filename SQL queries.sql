@@ -12,7 +12,7 @@ SELECT * FROM туры
 WHERE Цена BETWEEN :min_price AND :max_price; 
 
 SELECT * FROM туры
-WHERE EXTRACT(MONTH FROM Дата_отправления) = :desired_month; 
+WHERE Дата_отправления = '2024-03-17';
 
 SELECT * FROM Продажи
 WHERE Дата BETWEEN :start_date AND :end_date; 
