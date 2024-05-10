@@ -3,6 +3,11 @@ import data_insert
 import psycopg2
 import functools
 
+user_credentials = {
+    "админ": "123",
+    "user1": "1"
+}
+
 def connect_to_database():
     try:
         # Установка соединения с базой данных PostgreSQL
@@ -333,6 +338,8 @@ def query10():
     rows = cur.fetchall()
     conn.close()
     print_query_result(cur, rows)
+
+
 
 # Создание главного окна
 root = tk.Tk()
