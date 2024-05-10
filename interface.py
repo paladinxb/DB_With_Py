@@ -4,8 +4,8 @@ import psycopg2
 import functools
 
 user_credentials = {
-    "админ": "123",
-    "user1": "1"
+    "admin": {"password": "123", "role": "admin"},
+    "user1": {"password": "1", "role": "user"}
 }
 
 def connect_to_database():
@@ -23,7 +23,7 @@ def connect_to_database():
         print("Ошибка при подключении к базе данных:", e)
         return None
 
-def open_table_menu():
+def open_table_menu(root):
     table_menu = tk.Toplevel(root)
     table_menu.title("Меню работы с таблицами")
     table_menu.geometry("400x400")
@@ -34,25 +34,25 @@ def open_table_menu():
 
     # Создание кнопок для выбора таблицы
     # Здесь можно добавить кнопки для каждой таблицы в базе данных
-    table1_button = tk.Button(table_menu, text="туры", command=lambda: open_table_actions("туры"))
+    table1_button = tk.Button(table_menu, text="туры", command=lambda: open_table_actions("туры", root))
     table1_button.pack(pady=5)
 
-    table2_button = tk.Button(table_menu, text="Страны", command=lambda: open_table_actions("Страны"))
+    table2_button = tk.Button(table_menu, text="Страны", command=lambda: open_table_actions("Страны", root))
     table2_button.pack(pady=5)
 
-    table3_button = tk.Button(table_menu, text="Клиенты", command=lambda: open_table_actions("Клиенты"))
+    table3_button = tk.Button(table_menu, text="Клиенты", command=lambda: open_table_actions("Клиенты", root))
     table3_button.pack(pady=5)
 
-    table4_button = tk.Button(table_menu, text="Продажи", command=lambda: open_table_actions("Продажи"))
+    table4_button = tk.Button(table_menu, text="Продажи", command=lambda: open_table_actions("Продажи", root))
     table4_button.pack(pady=5)
 
-    table2_button = tk.Button(table_menu, text="Виды_туров", command=lambda: open_table_actions("Виды_туров"))
+    table2_button = tk.Button(table_menu, text="Виды_туров", command=lambda: open_table_actions("Виды_туров", root))
     table2_button.pack(pady=5)
 
     # Кнопка для возврата в главное меню
     back_button = tk.Button(table_menu, text="Назад", command=table_menu.destroy)
     back_button.pack(pady=10)
-def open_table_actions(table_name):
+def open_table_actions(table_name,root):
     # Создание нового окна для действий с таблицей
     actions_menu = tk.Toplevel(root)
     actions_menu.title(f"Меню действий с таблицей '{table_name}'")
@@ -77,7 +77,7 @@ def open_table_actions(table_name):
     # Кнопка для возврата к выбору таблицы
     back_button = tk.Button(actions_menu, text="Назад", command=actions_menu.destroy)
     back_button.pack(pady=10)
-def delete_row_prompt(table_name):
+def delete_row_prompt(table_name, root):
     # Создание диалогового окна для ввода номера ключа
     delete_prompt = tk.Toplevel(root)
     delete_prompt.title(f"Удаление строки из таблицы '{table_name}'")
@@ -184,7 +184,7 @@ def drop_column_from_database(conn, table_name, column_name):
         cur.close()
 conn = psycopg2.connect(dbname="PyPrac", user="postgres", password="1", host="185.166.197.179", port="5432")
 cur = conn.cursor()
-def open_query_menu():
+def open_query_menu(root):
     query_menu = tk.Toplevel(root)
     query_menu.title("Меню работы с запросами")
     query_menu.geometry("600x600")
@@ -342,20 +342,70 @@ def query10():
 
 
 # Создание главного окна
-root = tk.Tk()
-root.title("Программа работы с базой данных")
-root.geometry("400x150")
+def login_window():
+    login_screen = tk.Tk()
+    login_screen.title("Вход")
+    login_screen.geometry("300x200")
 
-# Создание метки с заголовком
-title_label = tk.Label(root, text="Выберите действие:")
-title_label.pack(pady=10)
+    def login():
+        username = username_entry.get()
+        password = password_entry.get()
 
-# Создание кнопок для выбора действия
-table_button = tk.Button(root, text="Работа с таблицами", command=open_table_menu)
-table_button.pack(pady=5)
+        if username in user_credentials and user_credentials[username]["password"] == password:
+            login_screen.destroy()
+            if user_credentials[username]["role"] == "admin":
+                open_main_window_admin()
+            else:
+                open_main_window_user()
+        else:
+            error_label.config(text="Неверное имя пользователя или пароль")
 
-query_button = tk.Button(root, text="Работа с запросами", command=open_query_menu)
-query_button.pack(pady=5)
+    username_label = tk.Label(login_screen, text="Имя пользователя:")
+    username_label.pack(pady=10)
+    username_entry = tk.Entry(login_screen)
+    username_entry.pack(pady=5)
 
-# Запуск главного цикла обработки событий
-root.mainloop()
+    password_label = tk.Label(login_screen, text="Пароль:")
+    password_label.pack(pady=5)
+    password_entry = tk.Entry(login_screen, show="*")
+    password_entry.pack(pady=5)
+
+    login_button = tk.Button(login_screen, text="Войти", command=login)
+    login_button.pack(pady=10)
+
+    error_label = tk.Label(login_screen, text="", fg="red")
+    error_label.pack(pady=5)
+
+    login_screen.mainloop()
+
+def open_main_window_admin():
+    root = tk.Tk()
+    root.title("Программа работы с базой данных (администратор)")
+    root.geometry("400x150")
+
+    title_label = tk.Label(root, text="Выберите действие:")
+    title_label.pack(pady=10)
+
+    table_button = tk.Button(root, text="Работа с таблицами", command=lambda: open_table_menu(root))
+    table_button.pack(pady=5)
+
+    query_button = tk.Button(root, text="Работа с запросами", command=lambda: open_query_menu(root))
+    query_button.pack(pady=5)
+
+    root.mainloop()
+
+def open_main_window_user():
+    root = tk.Tk()
+    root.title("Программа работы с базой данных (пользователь)")
+    root.geometry("400x150")
+
+    title_label = tk.Label(root, text="Выберите действие:")
+    title_label.pack(pady=10)
+
+    query_button = tk.Button(root, text="Работа с запросами", command=lambda: open_query_menu(root))
+    query_button.pack(pady=5)
+
+    root.mainloop()
+
+if __name__ == "__main__":
+    login_window()
