@@ -4,8 +4,8 @@ import psycopg2
 import functools
 
 user_credentials = {
-    "admin": {"password": "123", "role": "admin"},
-    "user1": {"password": "1", "role": "user"}
+    "any user name": {"password": " ", "role": " "},
+    "any user name": {"password": " ", "role": " "}
 }
 
 def connect_to_database():
