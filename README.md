@@ -1,7 +1,7 @@
 //// *Author: Ilya Kharkovets* ////
 
 //// *Email: paladinxb@gmail.com* ////
-
+ENG:
 This code was made for College Exam (05-22-2024)
 Everyone can use it.
 The program allows you to connect to your database and perform various actions with it.
@@ -11,3 +11,5 @@ Also in the repository there is code that creates tables, which can also help yo
 The functions can be converted to full work in the window, because data entry, table viewing, 
 and some other functions are performed through the use of the console.
 
+RU:
+Этот код был создан для экзамена в колледж (22 мая 2024 г.). Его может использовать каждый. Программа позволяет подключаться к вашей базе данных и совершать с ней различные действия. Все, что вам нужно сделать, это изменить путь подключения к базе данных, настроить ваших пользователей, изменить имена таблиц внутри интерфейса и изменить запросы к базе данных на те, которые вам нужны (это делается в файле «interface»). Так же в репозитории есть код создающий таблицы, который тоже может вам помочь, также есть файл с функциями, часть из которых вызывается в файле интерфейса. Функции можно перевести на полноценную работу в окне, поскольку ввод данных, просмотр таблиц и некоторые другие функции выполняются посредством использования консоли.
