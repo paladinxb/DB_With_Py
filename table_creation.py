@@ -2,12 +2,12 @@ import psycopg2
 def create_tables():
     # Подключение к базе данных
     conn = psycopg2.connect(
-        dbname="PyPrac",
-        user="postgres",
-        password="1",
-        host="185.166.197.179",
+        dbname="your db name",
+        user="your user name",
+        password="your password",
+        host="localhost or IP of server",
         port="5432"
-        )
+    )
     cursor = conn.cursor()
 
     cursor.execute('''
