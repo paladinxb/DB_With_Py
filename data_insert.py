@@ -4,10 +4,10 @@ def connect_to_database():
     try:
         # Установка соединения с базой данных PostgreSQL
         conn = psycopg2.connect(
-            dbname="PyPrac",
-            user="postgres",
-            password="1",
-            host="185.166.197.179",
+            dbname="your db name",
+            user="your user name",
+            password="your password",
+            host="localhost or IP of server",
             port="5432"
         )
         return conn
